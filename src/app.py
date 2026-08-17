@@ -6,7 +6,8 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QMainWindow, QApplication, QDockWidget, QFileDialog,
     QMessageBox, QToolBar, QComboBox, QLabel, QStatusBar, QSplitter,
-    QInputDialog, QPushButton
+    QInputDialog, QPushButton, QWidget, QSizePolicy,
+    QVBoxLayout, QHBoxLayout, QGridLayout
 )
 from PySide6.QtCore import Qt, QSize, QTimer, Signal
 from PySide6.QtGui import QPalette, QColor, QKeySequence, QAction, QIcon, QPixmap
@@ -175,20 +176,68 @@ class MainWindow(QMainWindow):
         self.statusbar.addPermanentWidget(self.sim_label)
 
     def _create_docks(self):
-        # LEFT SIDE: Tools (top) and Symbol Library (below, floating or stacked)
-        self.tool_dock = QDockWidget("Tools", self)
-        self.tool_palette = ToolPalette()
-        self.tool_dock.setWidget(self.tool_palette)
-        self.tool_dock.setMinimumWidth(140)
-        self.tool_dock.setMaximumWidth(180)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.tool_dock)
+        # LEFT SIDE: Single dock with a splitter for Tools + Symbol Library
+        self.left_panel = QWidget()
+        left_layout = QVBoxLayout(self.left_panel)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(0)
 
-        self.library_dock = QDockWidget("Symbol Library", self)
+        self._splitter = QSplitter(Qt.Vertical)
+        self._splitter.setHandleWidth(6)
+        self._splitter.setStyleSheet("""
+            QSplitter::handle:vertical {
+                background-color: #555;
+                height: 6px;
+                border-radius: 3px;
+            }
+            QSplitter::handle:vertical:hover {
+                background-color: #3a9fd4;
+            }
+        """)
+
+        self.tool_palette = ToolPalette()
+        self._tool_dock_inner = QWidget()
+        tool_l = QVBoxLayout(self._tool_dock_inner)
+        tool_l.setContentsMargins(0, 0, 0, 0)
+        tool_title = QLabel("Tools")
+        tool_title.setStyleSheet(
+            "font-weight: bold; font-size: 12px; color: #aaaaaa; padding: 4px 6px; "
+            "background-color: #2a2a2a; border-bottom: 1px solid #444;")
+        tool_l.addWidget(tool_title)
+        tool_l.addWidget(self.tool_palette)
+        tool_l.addStretch()
+
         self.symbol_library = SymbolLibrary()
-        self.library_dock.setWidget(self.symbol_library)
-        self.library_dock.setMinimumWidth(200)
-        self.library_dock.setMaximumWidth(260)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.library_dock)
+        self._lib_dock_inner = QWidget()
+        lib_l = QVBoxLayout(self._lib_dock_inner)
+        lib_l.setContentsMargins(0, 0, 0, 0)
+        lib_title = QLabel("Symbol Library")
+        lib_title.setStyleSheet(
+            "font-weight: bold; font-size: 12px; color: #aaaaaa; padding: 4px 6px; "
+            "background-color: #2a2a2a; border-bottom: 1px solid #444;")
+        lib_l.addWidget(lib_title)
+        lib_l.addWidget(self.symbol_library)
+        lib_l.addStretch()
+
+        self._splitter.addWidget(self._tool_dock_inner)
+        self._splitter.addWidget(self._lib_dock_inner)
+        self._splitter.setStretchFactor(0, 1)
+        self._splitter.setStretchFactor(1, 3)
+        self._splitter.setSizes([160, 320])
+
+        left_layout.addWidget(self._splitter)
+
+        self.left_dock = QDockWidget("Tools & Library", self)
+        self.left_dock.setWidget(self.left_panel)
+        self.left_dock.setMinimumWidth(220)
+        self.left_dock.setFloating(False)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.left_dock)
+        # Dock area stretch — library expands when window resizes
+        self.left_dock.setSizePolicy(
+            QSizePolicy.Preferred, QSizePolicy.Expanding)
+
+        self.tool_dock = self.left_dock   # backward compat for view menu
+        self.library_dock = self.left_dock
 
         # RIGHT SIDE: Properties panel
         self.props_dock = QDockWidget("Properties", self)
