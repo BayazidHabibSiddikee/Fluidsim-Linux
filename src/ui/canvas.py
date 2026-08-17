@@ -183,6 +183,7 @@ class _PlaceCommand:
             self.canvas.selected_component = None
             self.canvas.component_selected.emit(None)
         self.canvas.circuit_modified.emit()
+        self.canvas.placed.emit()
         self.canvas.update()
 
 
@@ -213,6 +214,7 @@ class _DeleteComponentCommand:
         self.canvas.components.append(self.comp)
         self.canvas.connections.extend(self.removed_conns)
         self.canvas.circuit_modified.emit()
+        self.canvas.deleted.emit()
         self.canvas.update()
 
 
@@ -235,6 +237,7 @@ class _PlaceWireCommand:
         if self.canvas.selected_connection is self.conn:
             self.canvas.selected_connection = None
         self.canvas.circuit_modified.emit()
+        self.canvas.wired.emit()
         self.canvas.update()
 
 
@@ -255,6 +258,7 @@ class _DeleteWireCommand:
         self.canvas.connections.append(self.conn)
         self.canvas.selected_connection = self.conn
         self.canvas.circuit_modified.emit()
+        self.canvas.deleted.emit()
         self.canvas.update()
 
 
@@ -296,6 +300,9 @@ class CircuitCanvas(QWidget):
     mouse_pos_changed = Signal(QPointF)
     circuit_modified = Signal()
     actuation_changed = Signal(object)  # Emitted when valve actuation changes
+    placed = Signal()          # New component was placed
+    wired  = Signal()          # New wire/connection was created
+    deleted = Signal()         # Component or wire was deleted
 
     def __init__(self, parent=None):
         super().__init__(parent)

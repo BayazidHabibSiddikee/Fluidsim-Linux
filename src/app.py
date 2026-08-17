@@ -16,6 +16,8 @@ from src.ui.properties import PropertiesPanel
 from src.ui.tools import ToolPalette
 from src.ui.library import SymbolLibrary
 from src.ui.validator import CircuitValidator, format_results
+from src.ui.sounds import SoundManager
+from src.ui.help_dialog import HelpDialog
 from src.simulation.engine import SimulationEngine
 
 
@@ -39,6 +41,8 @@ class MainWindow(QMainWindow):
         self._create_menus()
         self._create_toolbar()
         self._create_statusbar()
+        # Sound effects — must be before _connect_signals
+        self._sounds = SoundManager(self)
         self._connect_signals()
         self.sim_timer = QTimer()
         self.sim_timer.timeout.connect(self._sim_tick)
@@ -171,27 +175,27 @@ class MainWindow(QMainWindow):
         self.statusbar.addPermanentWidget(self.sim_label)
 
     def _create_docks(self):
+        # LEFT SIDE: Tools (top) and Symbol Library (below, floating or stacked)
         self.tool_dock = QDockWidget("Tools", self)
         self.tool_palette = ToolPalette()
         self.tool_dock.setWidget(self.tool_palette)
-        self.tool_dock.setMinimumWidth(160)
+        self.tool_dock.setMinimumWidth(140)
+        self.tool_dock.setMaximumWidth(180)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.tool_dock)
 
         self.library_dock = QDockWidget("Symbol Library", self)
         self.symbol_library = SymbolLibrary()
         self.library_dock.setWidget(self.symbol_library)
         self.library_dock.setMinimumWidth(200)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.library_dock)
+        self.library_dock.setMaximumWidth(260)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.library_dock)
 
+        # RIGHT SIDE: Properties panel
         self.props_dock = QDockWidget("Properties", self)
-        # Create a NEW properties panel for the dock (different instance)
         self.dock_props_panel = PropertiesPanel()
         self.props_dock.setWidget(self.dock_props_panel)
         self.props_dock.setMinimumWidth(260)
         self.addDockWidget(Qt.RightDockWidgetArea, self.props_dock)
-        # Tab library and properties docks together
-        self.tabifyDockWidget(self.library_dock, self.props_dock)
-        self.props_dock.raise_()
 
     def _connect_signals(self):
         self.tool_palette.tool_selected.connect(self.canvas.set_tool)
@@ -204,6 +208,11 @@ class MainWindow(QMainWindow):
         self.dock_props_panel.property_changed.connect(self.canvas.update_selected_property)
         self.canvas.actuation_changed.connect(self._on_actuation_changed)
 
+        # Sound hooks — wire canvas action signals
+        self.canvas.placed.connect(self._sounds.place)
+        self.canvas.wired.connect(self._sounds.wire)
+        self.canvas.deleted.connect(self._sounds.delete)
+
     def _act(self, text, shortcut, slot):
         a = QAction(text, self)
         if shortcut:
@@ -214,7 +223,7 @@ class MainWindow(QMainWindow):
     def _on_new(self):
         if self.modified and not self._confirm():
             return
-        self.canvas.clear_circuit()
+        self.canvas.clear_circuit(); self._sounds.delete()
         self.current_file = None
         self.modified = False
         self._update_title()
@@ -290,7 +299,7 @@ class MainWindow(QMainWindow):
                 json.dump(data, f, indent=2)
             self.modified = False
             self._update_title()
-            self.statusbar.showMessage(f"Saved: {path}")
+            self._sounds.place(); self.statusbar.showMessage(f"Saved: {path}")
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -317,7 +326,7 @@ class MainWindow(QMainWindow):
             self.sim_timer.stop()
             self.sim_btn.setText("Start")
             self.sim_btn.setChecked(False)
-            self.statusbar.showMessage("Simulation stopped")
+            self._sounds.sim_stop(); self.statusbar.showMessage("Simulation stopped")
             self.sim_label.setText("")
         else:
             # Validate before starting
@@ -332,7 +341,7 @@ class MainWindow(QMainWindow):
             self.sim_timer.start(max(10, int(50 / spd)))
             self.sim_btn.setText("Pause")
             self.sim_btn.setChecked(True)
-            self.statusbar.showMessage("Simulation running...")
+            self._sounds.sim_start(); self.statusbar.showMessage("Simulation running...")
             self.sim_label.setText("RUNNING")
             self.sim_label.setStyleSheet("color: #2ecc71; font-size: 10px; font-weight: bold;")
 
@@ -362,6 +371,7 @@ class MainWindow(QMainWindow):
                 "color: #e74c3c; font-size: 11px; font-weight: bold; padding: 2px 6px;")
             self._error_label.setToolTip(msgs)
             self.statusbar.showMessage(f"Circuit error: {msgs}", 0)
+            self._sounds.error()
         elif warnings:
             msgs = "; ".join(r.message for r in warnings)
             self._error_label.setText(f"! {len(warnings)} WARN")
@@ -387,7 +397,7 @@ class MainWindow(QMainWindow):
         """Keep the engine synced with an interactive port-switch toggle."""
         props = comp.get("properties", {})
         value = bool(props.get("actuated", False))
-        self.sim_engine.set_actuated(comp, value)
+        self._sounds.toggle(); self.sim_engine.set_actuated(comp, value)
         self.canvas.set_sim_states(dict(self.sim_engine.component_states))
         self.dock_props_panel.set_sim_states(dict(self.sim_engine.component_states))
         self.statusbar.showMessage(
@@ -431,85 +441,9 @@ class MainWindow(QMainWindow):
             "<p>Built with Python + PySide6</p>")
 
     def _show_shortcuts(self):
-        """Show comprehensive keyboard shortcuts in a formatted dialog."""
-        shortcuts = [
-            "<b>=== File Operations ===</b>",
-            "New Circuit: Ctrl+N",
-            "Open Circuit: Ctrl+O",
-            "Open .ct File: Ctrl+Shift+O",
-            "FluidSim 4.2 Browser: Ctrl+Shift+B",
-            "Save Circuit: Ctrl+S",
-            "Save As: Ctrl+Shift+S",
-            "Export Image: Ctrl+E",
-            "Exit: Ctrl+Q",
-            "",
-            "<b>=== Edit Operations ===</b>",
-            "Undo: Ctrl+Z",
-            "Redo: Ctrl+Y",
-            "Cut: Ctrl+X",
-            "Copy: Ctrl+C",
-            "Paste: Ctrl+V",
-            "Select All: Ctrl+A",
-            "Delete Selection: Del / Backspace",
-            "Clear Circuit: Ctrl+Delete",
-            "",
-            "<b>=== Component Operations ===</b>",
-            "Select Tool: V",
-            "Wire Tool: W",
-            "Place Component: P",
-            "Delete Component: X",
-            "Port Switch / Actuate Valve (Toggle): T",
-            "Rotate Component: R",
-            "Cancel Action: Esc",
-            "Duplicate: Ctrl+D",
-            "",
-            "<b>=== Simulation Control ===</b>",
-            "Start / Pause Simulation: F5",
-            "Single Step: F6",
-            "Reset Simulation: F7",
-            "",
-            "<b>=== View Control ===</b>",
-            "Zoom In: Ctrl+= or Ctrl+Plus",
-            "Zoom Out: Ctrl+- or Ctrl+Minus",
-            "Fit to View: Ctrl+0",
-            "Pan: Middle Mouse + Drag",
-            "Reset View: Home",
-            "",
-            "<b>=== Mode & Settings ===</b>",
-            "Switch Mode (Hydraulic/Pneumatic): Ctrl+M",
-            "Change Simulation Speed: 1-4 (1x, 2x, 4x)",
-            "Show/Hide Properties: F4",
-            "Show/Hide Library: F3",
-            "Show/Hide Tools: F2",
-            "",
-            "<b>=== Information ===</b>",
-            "Show Shortcuts: F1",
-            "Show About: F12",
-        ]
-
-        # Create a dialog with better formatting
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QPushButton
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Keyboard Shortcuts - FluidSim Linux")
-        dialog.setMinimumSize(500, 600)
-        layout = QVBoxLayout(dialog)
-
-        text_browser = QTextBrowser()
-        text_browser.setOpenExternalLinks(False)
-        text_browser.setHtml("<html><body style='font-family: sans-serif; font-size: 12px;'>" +
-                            "<h2 style='text-align: center; color: #333;'>FluidSim Linux - Keyboard Shortcuts</h2>" +
-                            "<p style='text-align: center; color: #666;'>Complete reference for all keyboard shortcuts</p>" +
-                            "<hr>" +
-                            "<br>".join(f"<p style='margin: 4px 0;'>{line}</p>" for line in shortcuts) +
-                            "</body></html>")
-        layout.addWidget(text_browser)
-
-        btn_close = QPushButton("Close")
-        btn_close.clicked.connect(dialog.accept)
-        layout.addWidget(btn_close)
-
-        dialog.setLayout(layout)
-        dialog.exec()
+        """Show the full manual & help dialog (tools, shortcuts, circuits, about)."""
+        dlg = HelpDialog(self)
+        dlg.exec()
 
     def _confirm(self):
         return QMessageBox.question(
