@@ -94,31 +94,38 @@ class ToolButton(QToolButton):
         icon = ICONS.get(spec.icon)
         if icon is not None:
             self.setIcon(icon)
-        self.setIconSize(QSize(28, 28))
+        self.setIconSize(QSize(32, 32))
         self.setText(spec.label)
         self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.setToolTip(
-            f"{spec.tooltip}\n\nShortcut: {spec.shortcut or 'none'}")
-        self.setMinimumHeight(72)
-        self.setMaximumHeight(80)
+        shortcut_hint = f" [{spec.shortcut}]" if spec.shortcut else ""
+        self.setToolTip(f"{spec.tooltip}{shortcut_hint}")
+        self.setMinimumHeight(80)
+        self.setMaximumHeight(90)
+        self.setMinimumWidth(64)
+        self.setMaximumWidth(72)
         self.setStyleSheet("""
             QToolButton {
-                border: 1px solid #3d3d3d;
-                border-radius: 6px;
-                background-color: #2d2d2d;
+                border: 2px solid transparent;
+                border-radius: 8px;
+                background-color: #2a2a2a;
                 color: #cccccc;
                 font-size: 11px;
-                padding: 4px 2px;
+                font-weight: 500;
+                padding: 6px 4px;
                 margin: 2px;
             }
             QToolButton:hover {
-                background-color: #3d3d3d;
+                background-color: #3a3a3a;
                 border-color: #5a9fd4;
             }
             QToolButton:checked {
                 background-color: #1a5276;
                 border-color: #2e86c1;
                 color: #ffffff;
+                font-weight: bold;
+            }
+            QToolButton:hover:!checked {
+                background-color: #323232;
             }
         """)
 
