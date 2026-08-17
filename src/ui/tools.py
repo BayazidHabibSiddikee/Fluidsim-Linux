@@ -36,7 +36,6 @@ TOOLS = [
     ToolSpec("wire", "Wire", "Click ports to draw connections", "W", "tool_wire"),
     ToolSpec("place", "Place", "Place selected symbol on canvas", "P", "tool_place"),
     ToolSpec("delete", "Delete", "Remove selected component", "X", "tool_delete"),
-    ToolSpec("pan", "Pan", "Drag to pan the view", "", "tool_pan"),
     ToolSpec(
         "toggle", "Actuate",
         "Click a directional valve to flip its port switch", "T", "tool_toggle"),

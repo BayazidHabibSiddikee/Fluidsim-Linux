@@ -29,13 +29,13 @@ def check(cond, message):
 
 def test_tool_registry():
     mgr = ToolManager()
-    check(len(mgr.tools) == 6, f"six tools registered, got {len(mgr.tools)}")
-    check(mgr.ids == ["select", "wire", "place", "delete", "pan", "toggle"],
+    check(len(mgr.tools) == 5, f"five tools registered, got {len(mgr.tools)}")
+    check(mgr.ids == ["select", "wire", "place", "delete", "toggle"],
           f"tool order differs: {mgr.ids}")
     check(mgr.get("toggle").label == "Actuate", "toggle label")
-    check(mgr.has("delete") and mgr.has("pan") and mgr.has("toggle"),
-          "delete/pan/toggle present")
-    check(mgr.index_of("toggle") == 5, "toggle is last (index 5)")
+    check(mgr.has("delete") and mgr.has("toggle"),
+          "delete/toggle present")
+    check(mgr.index_of("toggle") == 4, "toggle is last (index 4)")
 
 
 def test_custom_manager():
@@ -60,12 +60,12 @@ def test_palette_builds_buttons():
     check(palette.get_current_tool() == "toggle", "current tool updated")
     # Backward-compat: .buttons exposes the QButtonGroup with id->tool order.
     check(palette.buttons.button(3) is not None, "button idx 3 (delete) exists")
-    check(palette.buttons.button(5) is not None, "button idx 5 (toggle) exists")
+    check(palette.buttons.button(4) is not None, "button idx 4 (toggle) exists")
     # .buttons is still indexable/iterable (list-like) and has .button() for
     # the canvas keyboard shortcut path.
-    btn5 = palette.buttons[5]
-    check(btn5.text().startswith("Actuate"), "buttons[5] is the Actuate button")
-    check(len(list(palette.buttons)) == 6, "palette iterates 6 buttons")
+    btn5 = palette.buttons[4]
+    check(btn5.text().startswith("Actuate"), "buttons[4] is the Actuate button")
+    check(len(list(palette.buttons)) == 5, "palette iterates 5 buttons")
 
 
 def main():

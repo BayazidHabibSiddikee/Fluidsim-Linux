@@ -26,7 +26,7 @@ def test_app():
 
     # Verify tool palette has icon buttons
     assert hasattr(win.tool_palette, 'buttons'), "Tool palette has no buttons"
-    assert len(win.tool_palette.buttons) == 6, f"Expected 5 tools, got {len(win.tool_palette.buttons)}"
+    assert len(win.tool_palette.buttons) == 5, f"Expected 5 tools, got {len(win.tool_palette.buttons)}"
 
     # Verify canvas is the new enhanced canvas
     from src.ui.canvas import CircuitCanvas
@@ -197,7 +197,7 @@ def test_icons():
     icons = make_all_icons()
 
     # Check essential icons exist and are valid
-    essential = ["tool_select", "tool_wire", "tool_place", "tool_delete", "tool_pan",
+    essential = ["tool_select", "tool_wire", "tool_place", "tool_delete", 
                  "file_new", "file_open", "file_save", "sim_play", "comp_pump", "comp_cylinder"]
 
     for name in essential:

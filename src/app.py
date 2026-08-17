@@ -15,6 +15,7 @@ from src.ui.canvas import CircuitCanvas
 from src.ui.properties import PropertiesPanel
 from src.ui.tools import ToolPalette
 from src.ui.library import SymbolLibrary
+from src.ui.validator import CircuitValidator, format_results
 from src.simulation.engine import SimulationEngine
 
 
@@ -41,6 +42,12 @@ class MainWindow(QMainWindow):
         self._connect_signals()
         self.sim_timer = QTimer()
         self.sim_timer.timeout.connect(self._sim_tick)
+        # Circuit validator
+        self._validator = CircuitValidator()
+        self._error_label = QLabel("")
+        self._error_label.setStyleSheet(
+            "color: #e74c3c; font-size: 10px; font-weight: bold; padding: 2px 6px;")
+        self.statusbar.addPermanentWidget(self._error_label)
 
     def _init_ui(self):
         # Main canvas takes full central area
@@ -313,6 +320,13 @@ class MainWindow(QMainWindow):
             self.statusbar.showMessage("Simulation stopped")
             self.sim_label.setText("")
         else:
+            # Validate before starting
+            self._validate_circuit()
+            errors = [r for r in self._validator.validate(
+                self.canvas.components, self.canvas.connections,
+                self.mode_combo.currentText().lower()) if r.level == "error"]
+            if errors and not self._confirm_sim_with_errors(errors):
+                return
             self.sim_running = True
             spd = float(self.speed_combo.currentText().replace("x", ""))
             self.sim_timer.start(max(10, int(50 / spd)))
@@ -328,6 +342,46 @@ class MainWindow(QMainWindow):
         self.canvas.set_sim_states(dict(self.sim_engine.component_states))
         # Also push to properties panel for live values
         self.dock_props_panel.set_sim_states(dict(self.sim_engine.component_states))
+
+    def _on_modified(self):
+        self.modified = True
+        self._update_title()
+        self._validate_circuit()
+
+    def _validate_circuit(self):
+        """Run circuit validation and show errors/warnings in status bar."""
+        results = self._validator.validate(
+            self.canvas.components, self.canvas.connections,
+            self.mode_combo.currentText().lower())
+        errors = [r for r in results if r.level == "error"]
+        warnings = [r for r in results if r.level == "warning"]
+        if errors:
+            msgs = "; ".join(r.message for r in errors)
+            self._error_label.setText(f"⚠ {len(errors)} ERRORS")
+            self._error_label.setStyleSheet(
+                "color: #e74c3c; font-size: 11px; font-weight: bold; padding: 2px 6px;")
+            self._error_label.setToolTip(msgs)
+            self.statusbar.showMessage(f"Circuit error: {msgs}", 0)
+        elif warnings:
+            msgs = "; ".join(r.message for r in warnings)
+            self._error_label.setText(f"! {len(warnings)} WARN")
+            self._error_label.setStyleSheet(
+                "color: #f39c12; font-size: 11px; font-weight: bold; padding: 2px 6px;")
+            self._error_label.setToolTip(msgs)
+            self.statusbar.showMessage(f"Circuit warning: {msgs}", 6000)
+        else:
+            self._error_label.setText("✓ OK")
+            self._error_label.setStyleSheet(
+                "color: #2ecc71; font-size: 11px; font-weight: bold; padding: 2px 6px;")
+            self.statusbar.showMessage("Circuit valid")
+
+    def _confirm_sim_with_errors(self, errors):
+        """Ask user to confirm running despite errors."""
+        msgs = "\n".join(f"  • {r.message}" for r in errors)
+        return QMessageBox.question(
+            self, "Circuit Has Errors",
+            f"Found {len(errors)} error(s):\n{msgs}\n\nRun simulation anyway?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No) == QMessageBox.Yes
 
     def _on_actuation_changed(self, comp):
         """Keep the engine synced with an interactive port-switch toggle."""

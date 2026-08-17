@@ -111,19 +111,24 @@ Edit component properties in the Properties panel:
 ```
 FluidSim-Linux/
 ├── main.py              # Application entry point
+├── launcher.py          # Launcher (simulator / .ct browser)
 ├── src/
 │   ├── app.py          # Main application window
-│   ├── editor/
+│   ├── ui/             # Qt widgets
 │   │   ├── canvas.py   # Circuit editing canvas
 │   │   ├── tools.py    # Tool palette
-│   │   └── properties.py # Component properties panel
+│   │   ├── properties.py # Component properties panel
+│   │   ├── library.py  # Symbol library browser
+│   │   ├── icons.py    # Programmatic QIcon generation
+│   │   └── validator.py # Circuit error/warning checks
 │   ├── simulation/     # Core simulation engine
 │   │   └── engine.py
 │   └── symbols/        # Symbol library
-│       ├── library.py
-│       └── __init__.py
+│       └── library.py  # ISO schematic symbols, ports, defaults
 ├── src/tools/           # Advanced tools
-│   └── ct_browser.py   # CT file browser and decoder
+│   ├── ct_browser.py   # CT file browser and decoder
+│   └── ct_import.py    # CT file import
+├── bin/                # Launcher scripts (fl_sim, fl_sim_h, fl_sim_p)
 ├── requirements.txt    # Dependencies
 └── README.md           # This file
 ```

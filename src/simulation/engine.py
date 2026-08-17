@@ -116,24 +116,45 @@ class SimulationEngine:
             _apply_actuation(state, props)
         elif ctype == "cylinder_single":
             sp = state["position"]
-            if sp < 1.0 and state["pressure_a"] > 1e5:
-                force = (state["pressure_a"] - self.pressure) * props.get("bore_area", 0.00126)
-                mass = props.get("mass", 2.0)
+            bore_area = props.get("bore_area", props.get("bore", 50)**2 * math.pi / 4 / 1e6)
+            mass = props.get("mass", 2.0)
+            # Default return spring: ~50% of max pressure force so the
+            # cylinder fully extends but always springs back.
+            p_work = 5e5 if self.mode == "hydraulic" else 6e5
+            spring_k = props.get("spring_k", 0.5 * p_work * bore_area)
+            # Extend when pressurized
+            if sp < 1.0 and state["pressure_a"] > self.pressure + 1e4:
+                force = (state["pressure_a"] - self.pressure) * bore_area
                 state["velocity"] += (force / mass) * self.dt
-                state["velocity"] *= 0.95
+                state["velocity"] *= 0.9
                 state["position"] = min(1.0, sp + state["velocity"] * self.dt)
-            elif state["pressure_a"] < 1e5 and state["position"] > 0:
-                state["position"] = max(0.0, sp - 0.5 * self.dt)
-                state["velocity"] = 0.0
+            # Spring-return when pressure drops
+            elif state["pressure_a"] < self.pressure + 1e4 and sp > 0:
+                spring_force = spring_k * sp  # spring pulls back proportional to extension
+                damping = state["velocity"] * 2.0
+                accel = -(spring_force + damping) / mass
+                state["velocity"] += accel * self.dt
+                state["velocity"] *= 0.9
+                state["position"] = max(0.0, sp + state["velocity"] * self.dt)
+            else:
+                state["velocity"] *= 0.9
         elif ctype in ("cylinder_double", "cylinder_telescopic",
                        "plunger_cylinder", "cylinder_cushioned"):
             sp = state["position"]
-            f_a = (state["pressure_a"] - self.pressure) * props.get("bore_area", 0.00126)
-            f_b = (state["pressure_b"] - self.pressure) * props.get("rod_area", 0.0006)
-            net = f_a - f_b
+            bore_area = props.get("bore_area", props.get("bore", 50)**2 * math.pi / 4 / 1e6)
+            rod_area = props.get("rod_area", props.get("rod_diameter", 20)**2 * math.pi / 4 / 1e6)
             mass = props.get("mass", 2.0)
+            # Double-acting cylinders have no return spring unless one is
+            # explicitly configured (e.g. cylinder_cushioned with a spring).
+            spring_k = props.get("spring_k", 0.0)
+            # Net force from both chambers
+            f_a = (state["pressure_a"] - self.pressure) * bore_area
+            f_b = (state["pressure_b"] - self.pressure) * (bore_area - rod_area)
+            # Optional spring return force (pulls toward position=0)
+            spring_force = -spring_k * sp
+            net = f_a + f_b + spring_force
             state["velocity"] += (net / mass) * self.dt
-            state["velocity"] *= 0.95
+            state["velocity"] *= 0.9
             state["position"] = max(0.0, min(1.0, sp + state["velocity"] * self.dt))
         elif ctype in GAUGE_TYPES:
             state["reading"] = state.get("pressure_a", 0.0)
@@ -154,6 +175,7 @@ class SimulationEngine:
 
         Pumps/compressors are pressure sources. Directional valves only
         pass pressure when actuated. Tanks are drains (ground).
+        Unpressurized nodes immediately drain to atmosphere for responsive behavior.
         """
         comp_map = {c["id"]: c for c in components}
         adj = {cid: [] for cid in comp_map}
@@ -164,11 +186,10 @@ class SimulationEngine:
                 adj[a].append(b)
                 adj[b].append(a)
 
-        pressure = (self.pressure + 5e5 if self.mode == "hydraulic"
-                    else self.pressure + 6e5)
+        source_pressure = (self.pressure + 5e5 if self.mode == "hydraulic"
+                           else self.pressure + 6e5)
 
-        # Neutral networks: every connected node not reached by a source
-        # or a tank gets drained towards the tank/atmosphere pressure.
+        # Identify pressurized nodes starting from active sources
         pressurized = set()
         for comp in components:
             cid = comp["id"]
@@ -177,23 +198,23 @@ class SimulationEngine:
             if _is_pressure_source(ctype) and state.get("flow_rate", 0) > 0:
                 pressurized.add(cid)
             elif ctype == "tank":
-                # Tank is a drain: neutral networks connected to it lose
-                # pressure; the tank itself holds system pressure.
                 state["pressure"] = self.pressure
                 state["level"] = min(1.0, state.get("level", 0.8) + 0.0001)
 
-        # Flood-fill from each source through open valves.
+        # Flood-fill from each source through open valves
         stack = list(pressurized)
         while stack:
             cid = stack.pop()
             state = self.component_states.get(cid, {})
+            # Apply source pressure to all ports
             for key in ("pressure_a", "pressure_b", "reading"):
                 if key in state:
-                    state[key] = pressure
+                    state[key] = source_pressure
             for nxt in adj.get(cid, []):
                 if nxt in pressurized:
                     continue
                 ntype = comp_map[nxt].get("type", "")
+                # Valves only pass pressure when actuated
                 if ntype in DIRECTIONAL_VALVES:
                     nstate = self.component_states.get(nxt, {})
                     if not nstate.get("actuated"):
@@ -201,8 +222,7 @@ class SimulationEngine:
                 pressurized.add(nxt)
                 stack.append(nxt)
 
-        # Drain every node that ended up in a neutral (unpressurized)
-        # network: it is not reachable from a source through open valves.
+        # Drain ALL non-pressurized, non-tank components instantly to atmosphere
         for comp in components:
             cid = comp["id"]
             state = self.component_states.get(cid, {})
@@ -211,9 +231,10 @@ class SimulationEngine:
             ctype = comp.get("type", "")
             if ctype == "tank":
                 continue
+            # Instant drain: set all port pressures to atmospheric
             for key in ("pressure_a", "pressure_b", "reading"):
                 if key in state:
-                    state[key] = max(0.0, state[key] - 5e5 * self.dt)
+                    state[key] = 0.0
 
     def get_state(self, component_id):
         return self.component_states.get(component_id, {})

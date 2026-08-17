@@ -1,6 +1,6 @@
 """CT file browser and decoder for FluidSim 4.2."""
 import os
-import struct
+from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QSplitter, QTextEdit, QStackedWidget, QFileDialog, QMessageBox,
@@ -207,10 +207,13 @@ class CTDecoder:
 
 class CTBrowser(QWidget):
     """Browser widget for FluidSim 4.2 .ct files"""
-    
+
     def __init__(self):
         super().__init__()
-        self.ct_root = '/home/sword/Downloads/FluidSim 4.2'
+        from src.tools.ct_import import detect_fluidsim_root
+        self.ct_root = detect_fluidsim_root()
+        if self.ct_root is None:
+            self.ct_root = Path.home() / "Downloads" / "FluidSim 4.2"
         self.decoder = CTDecoder()
         self.setup_ui()
         self.load_ct_structure()
@@ -309,6 +312,13 @@ class CTBrowser(QWidget):
     
     def load_ct_structure(self):
         """Load and organize the .ct file structure"""
+        if not os.path.isdir(self.ct_root):
+            self.status_label.setText(
+                f"FluidSim 4.2 not found at {self.ct_root} — install it or "
+                f"place the folder in ~/Downloads/FluidSim 4.2")
+            self.tree_widget.clear()
+            self.all_files = []
+            return
         self.status_label.setText("Scanning directory structure...")
         
         categories = analyze_ct_structure(self.ct_root)

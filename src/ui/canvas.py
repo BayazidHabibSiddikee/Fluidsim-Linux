@@ -360,7 +360,7 @@ class CircuitCanvas(QWidget):
         # Accept every registered tool id. Older code only wrote to the
         # canvas from the palette for select/wire/place; delete/pan/toggle
         # are now handled directly here too.
-        if tool_name not in ("select", "wire", "place", "delete", "pan",
+        if tool_name not in ("select", "wire", "place", "delete",
                              "toggle"):
             return
         self._tool = tool_name
@@ -933,13 +933,6 @@ class CircuitCanvas(QWidget):
     def mousePressEvent(self, event):
         scene_pos = self._widget_to_scene(event.position())
 
-        # Middle button = pan
-        if event.button() == Qt.MiddleButton:
-            self._panning = True
-            self._pan_start_widget = event.position()
-            self._pan_start_offset = QPointF(self._pan_offset)
-            self.setCursor(Qt.ClosedHandCursor)
-            return
 
         if event.button() == Qt.LeftButton:
             # --- PLACE mode ---
@@ -1014,13 +1007,6 @@ class CircuitCanvas(QWidget):
                     self.toggle_component_actuation(comp)
                 return
 
-            # --- PAN mode ---
-            if self._tool == "pan":
-                self._panning = True
-                self._pan_start_widget = event.position()
-                self._pan_start_offset = QPointF(self._pan_offset)
-                self.setCursor(Qt.ClosedHandCursor)
-                return
 
             # --- SELECT mode ---
             # Check resize handles first
@@ -1279,7 +1265,7 @@ class CircuitCanvas(QWidget):
         elif key == Qt.Key_T:
             parent = self.tool_palette_parent()
             if parent:
-                parent.buttons.button(5).click()
+                parent.buttons.button(4).click()
         else:
             super().keyPressEvent(event)
 

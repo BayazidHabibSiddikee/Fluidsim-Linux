@@ -60,20 +60,20 @@ FluidSim-Linux/
 - Manages file operations and simulation controls
 - Integrates editor, simulation, and library components
 
-**src/editor/canvas.py**
+**src/ui/canvas.py**
 - Primary circuit editing interface
 - Handles user input: mouse clicks, drags, wheel events
 - Manages component placement, selection, and connections
 - Implements zoom, pan, and viewport controls
 - Provides export functionality (PNG, SVG)
 
-**src/editor/tools.py**
+**src/ui/tools.py**
 - Tool palette for selecting operations
-- Tools: Select, Wire, Place, Delete, Pan
+- Tools: Select, Wire, Place, Delete, Actuate
 - Provides visual feedback for active operations
 - Integrates with canvas operations
 
-**src/editor/properties.py**
+**src/ui/properties.py**
 - Component properties editor
 - Dynamic property panels based on component type
 - Real-time property updates during simulation
@@ -101,7 +101,7 @@ FluidSim-Linux/
 
 ### Directory Organization
 
-**src/editor/**
+**src/ui/**
 - Circuit editing functionality
 - User interaction handling
 - Canvas management and rendering

@@ -15,10 +15,9 @@ import os
 import re
 from pathlib import Path
 
-# Default location of the real FluidSim 4.2 installation if present.
+# Default locations of the real FluidSim 4.2 installation if present.
 DEFAULT_FLUIDSIM_ROOT = [
     Path.home() / "Downloads" / "FluidSim 4.2",
-    Path("/home/sword/Downloads/FluidSim 4.2"),
 ]
 
 # Map real .ct symbol filenames (without extension) to our catalog ids.

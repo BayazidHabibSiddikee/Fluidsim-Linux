@@ -36,7 +36,7 @@ def _make_comp(ctype, cid="c1"):
 
 def test_set_tool_accepts_all_tools():
     canvas = CircuitCanvas()
-    for tool in ("select", "wire", "place", "delete", "pan", "toggle"):
+    for tool in ("select", "wire", "place", "delete", "toggle"):
         canvas.set_tool(tool)
         check(canvas._tool == tool, f"set_tool({tool!r}) accepted")
 
