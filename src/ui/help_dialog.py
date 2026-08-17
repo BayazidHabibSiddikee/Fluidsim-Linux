@@ -128,7 +128,7 @@ class HelpDialog(QDialog):
             group = QGroupBox(title)
             glayout = QFormLayout()
             for key, desc in items:
-                glayout.addRow(f"<b>{key}</b>", desc)
+                glayout.addRow(f"<b>{key}</b>", QLabel(desc))
             group.setLayout(glayout)
             layout.addWidget(group)
         
