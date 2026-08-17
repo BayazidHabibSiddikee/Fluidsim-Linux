@@ -468,7 +468,7 @@ class MainWindow(QMainWindow):
     def _on_speed(self, text):
         if self.sim_running:
             spd = float(text.replace("x", ""))
-            self.sim_timer.setInterval(max(10, int(50 / spd)))
+            self.sim_timer.setInterval(max(5, int(20 / spd)))
 
     def _from_library_mode(self, mode):
         # Selecting a domain part in the library should also switch the

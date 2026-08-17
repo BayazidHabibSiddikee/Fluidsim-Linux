@@ -42,7 +42,7 @@ class SimulationEngine:
     def __init__(self):
         self.mode = "hydraulic"
         self.time = 0.0
-        self.dt = 0.001
+        self.dt = 0.005
         self.pressure = 101325.0
         self.gravity = 9.81
         self.fluid_density = 870.0
@@ -126,18 +126,20 @@ class SimulationEngine:
             if sp < 1.0 and state["pressure_a"] > self.pressure + 1e4:
                 force = (state["pressure_a"] - self.pressure) * bore_area
                 state["velocity"] += (force / mass) * self.dt
-                state["velocity"] *= 0.9
-                state["position"] = min(1.0, sp + state["velocity"] * self.dt)
+                state["position"] = max(0.0, min(1.0, sp + state["velocity"] * self.dt))
+                if state["position"] <= 0.0 or state["position"] >= 1.0:
+                    state["velocity"] = 0.0
             # Spring-return when pressure drops
             elif state["pressure_a"] < self.pressure + 1e4 and sp > 0:
-                spring_force = spring_k * sp  # spring pulls back proportional to extension
-                damping = state["velocity"] * 2.0
+                spring_force = spring_k * sp
+                damping = state["velocity"] * 1.5
                 accel = -(spring_force + damping) / mass
                 state["velocity"] += accel * self.dt
-                state["velocity"] *= 0.9
-                state["position"] = max(0.0, sp + state["velocity"] * self.dt)
+                state["position"] = max(0.0, min(1.0, sp + state["velocity"] * self.dt))
+                if state["position"] <= 0.0:
+                    state["velocity"] = 0.0
             else:
-                state["velocity"] *= 0.9
+                state["velocity"] *= 0.95
         elif ctype in ("cylinder_double", "cylinder_telescopic",
                        "plunger_cylinder", "cylinder_cushioned"):
             sp = state["position"]
@@ -154,8 +156,9 @@ class SimulationEngine:
             spring_force = -spring_k * sp
             net = f_a + f_b + spring_force
             state["velocity"] += (net / mass) * self.dt
-            state["velocity"] *= 0.9
             state["position"] = max(0.0, min(1.0, sp + state["velocity"] * self.dt))
+            if state["position"] <= 0.0 or state["position"] >= 1.0:
+                state["velocity"] = 0.0
         elif ctype in GAUGE_TYPES:
             state["reading"] = state.get("pressure_a", 0.0)
         elif ctype == "relief_valve":
