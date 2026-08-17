@@ -96,11 +96,19 @@ def _snap_to_grid(value, grid=GRID_SIZE):
 
 
 def _lroute(p1, p2):
-    """L-shaped wire routing: pick the shorter overall path."""
+    """L-shaped wire routing: pick the shorter overall path.
+
+    The intermediate corner is clamped to (20, 20) minimum so wires never
+    pass through the top-left corner of the canvas.
+    """
     if abs(p1.x() - p2.x()) < abs(p1.y() - p2.y()):
-        return [p1, QPointF(p1.x(), p2.y()), p2]
+        corner = QPointF(p1.x(), p2.y())
     else:
-        return [p1, QPointF(p2.x(), p1.y()), p2]
+        corner = QPointF(p2.x(), p1.y())
+    # Clamp corner away from origin to prevent diagonal lines across canvas
+    corner.setX(max(corner.x(), 20.0))
+    corner.setY(max(corner.y(), 20.0))
+    return [p1, corner, p2]
 
 
 def _qpointf_to_dict(p):
