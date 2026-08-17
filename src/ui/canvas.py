@@ -667,12 +667,20 @@ class CircuitCanvas(QWidget):
         self.update()
 
     def save_circuit(self):
-        comps = [dict(c) for c in self.components]
+        import copy
+        comps = [copy.deepcopy(c) for c in self.components]
         conns = []
         for c in self.connections:
-            conn = dict(c)
+            conn = copy.deepcopy(c)
             if "points" in conn:
-                conn["points"] = [_qpointf_to_dict(p) for p in conn["points"]]
+                # Points may be QPointF (live canvas) or dict (already saved JSON)
+                out = []
+                for p in conn["points"]:
+                    if isinstance(p, dict):
+                        out.append(p)          # already serialised
+                    else:
+                        out.append(_qpointf_to_dict(p))
+                conn["points"] = out
             conns.append(conn)
         return {"components": comps, "connections": conns}
 

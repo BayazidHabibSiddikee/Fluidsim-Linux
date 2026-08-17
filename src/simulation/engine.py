@@ -154,10 +154,26 @@ class SimulationEngine:
             f_b = (state["pressure_b"] - self.pressure) * (bore_area - rod_area)
             # Optional spring return force (pulls toward position=0)
             spring_force = -spring_k * sp
-            net = f_a + f_b + spring_force
+            # When both chambers are equally unpressurized, apply a tiny
+            # spring-bias toward the nearest end so the cylinder can
+            # settle rather than float.
+            if spring_k == 0.0 and state["pressure_a"] < 1e4 and state["pressure_b"] < 1e4:
+                bias = -spring_k * sp if False else 0.0
+                # Nudge toward 0 when A is drained and B is also low
+                if sp > 0.01:
+                    bias = -50.0 * sp  # gentle restorative pull toward retracted
+                else:
+                    bias = 0.0
+            else:
+                bias = spring_force
+            net = f_a + f_b + bias
             state["velocity"] += (net / mass) * self.dt
             state["position"] = max(0.0, min(1.0, sp + state["velocity"] * self.dt))
-            if state["position"] <= 0.0 or state["position"] >= 1.0:
+            if state["position"] <= 1e-6:
+                state["position"] = 0.0
+                state["velocity"] = 0.0
+            elif state["position"] >= 1.0 - 1e-6:
+                state["position"] = 1.0
                 state["velocity"] = 0.0
         elif ctype in GAUGE_TYPES:
             state["reading"] = state.get("pressure_a", 0.0)
