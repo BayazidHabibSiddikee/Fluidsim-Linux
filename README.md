@@ -1,240 +1,270 @@
-# FluidSim Linux - README
+# FluidSim Linux
 
-## Overview
+A **Linux-native replacement** for [FluidSim 4.2](https://www.festo.com), an interactive hydraulic & pneumatic circuit simulator. Build circuits visually, wire components together, and run real-time physics simulations — all without Wine.
 
-FluidSim Linux is a **Linux-native replacement** for FluidSim 4.2, the popular hydraulic and pneumatic circuit simulator. This application provides a complete graphical interface for designing, simulating, and analyzing hydraulic and pneumatic circuits.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ## Features
 
 ### Core Simulation
-- **Real-time hydraulic and pneumatic circuit simulation**
-- **Interactive drag-and-drop component placement**
-- **Wiring and connection creation** with auto-routing
-- **Component properties editing** (flow rates, pressures, dimensions)
-- **Spring-return valves, actuators, pumps, compressors, motors**
-- **Tanks, reservoirs, filters, regulators, gauges**
+- Real-time hydraulic and pneumatic circuit simulation with full ISO 1219 symbols
+- Interactive drag-and-drop component placement with snap-to-grid
+- Auto-routed L-shaped wire connections with port detection
+- Physics engine: pressure propagation, cylinder forces, valve switching, spring return
+- Live simulation visualization — cylinders extend/retract, gauges move, valves glow when actuated
+
+### Circuit Validation
+- Real-time error detection in the status bar
+- 🔴 Red warnings for floating components, unknown references
+- 🟡 Orange warnings for incomplete connections
+- 🔵 Blue info for circuit loop detection
+- Validates before starting simulation to catch wiring mistakes early
+
+### Symbol Library (117 components)
+- **Hydraulic**: 48 symbols — pumps, cylinders, motors, valves, sensors, accessories
+- **Pneumatic**: 30 symbols — compressors, air supplies, cylinders, valves, sensors
+- **Electrical**: 22 symbols — power supplies, motors, relays, switches, semiconductors
+- **Digital & Control**: 17 symbols — logic gates, flip-flops, timers, PLCs, displays
 
 ### User Interface
-- **Modern PySide6-based GUI** (native Linux application)
-- **Symbol library browser** with graphical icons
-- **Properties panel** for component configuration
-- **Tool palette** (select, wire, place, delete, pan)
-- **File operations** (new, open, save, export image)
-- **Simulation controls** (start, pause, step, reset)
-- **Status bar and tooltips**
+- Modern icon-based tool palette (Select, Wire, Place, Delete, Actuate)
+- Symbol library with category tabs, thumbnail previews, and global search
+- Categorized properties panel with live simulation values
+- Keyboard shortcuts: `V` Select · `W` Wire · `P` Place · `X` Delete · `A` Actuate · `R` Rotate
+- Zoom with mouse wheel, pan with middle mouse button
+- Export circuits as PNG or SVG
 
-### File Management
-- **Import/export circuit files** in JSON format
-- **Browse .ct files** from original FluidSim 4.2
-- **Visual file browser** with tree structure
-- **File preview** capabilities
+### File Support
+- Save/load circuits in JSON format
+- Import `.ct` files from FluidSim 4.2 (Festo Didactic)
+- Browse and preview existing FluidSim 4.2 libraries
 
 ## System Requirements
 
-### Minimum
-- **Linux** (any recent distribution)
-- **Python 3.8 or higher**
-- **PySide6** (Qt6 binding for Python)
-- **numpy** (for numerical computations)
-
-### Recommended
-- 8GB RAM minimum, 16GB+ for complex simulations
-- Graphics card with OpenGL support
-- 1280x720 screen resolution or higher
+- **OS**: Linux (any recent distribution with X11/Wayland)
+- **Python**: 3.8 or higher
+- **Dependencies**: PySide6 ≥ 6.5.0, numpy ≥ 1.21.0
 
 ## Installation
 
-### Quick Start
 ```bash
-# Clone the repository
-cd /path/to
+# Install dependencies
+pip install -r requirements.txt
 
-# The application is ready to run
-# macOS/Linux
-python3 main.py
-```
-
-### Requirements Installation
-```bash
-# Install dependencies using pip
-pip install PySide6>=6.5.0
-pip install numpy>=1.21.0
+# Or manually
+pip install "PySide6>=6.5.0" "numpy>=1.21.0"
 ```
 
 ## Usage
 
-### 1. Starting the Application
-1. Run `python3 main.py` from the project directory
-2. Wait for the application to load (startup may take a few seconds)
+### Quick Start
+```bash
+python3 main.py
+```
 
-### 2. Basic Operations
+Or use the launcher for additional options:
+```bash
+python3 launcher.py          # Launcher menu (simulator + .ct browser)
+python3 main.py --mode hydraulic   # Start directly in hydraulic mode
+python3 main.py --mode pneumatic   # Start directly in pneumatic mode
+```
 
-#### Using the GUI
-- **Drag components** from the symbol library onto the canvas
-- **Click components** to select and edit properties
-- **Draw wires** by clicking ports and connecting components
-- **Simulate** circuits using the control buttons
-- **Save/Load** circuit projects
+### Launcher Scripts
+```bash
+bin/fl_sim          # Launch circuit simulator
+bin/fl_sim_h        # Launch in hydraulic mode
+bin/fl_sim_p        # Launch in pneumatic mode
+```
 
-#### Symbol Library
-The symbol library is organized by type:
-- **Hydraulic Components**: Pumps, Cylinders, Motors, Valves, Tanks
-- **Pneumatic Components**: Compressors, Air Supply, Cylinders, Motors, Valves
-- **Accessories**: Gauges, Filters, Regulators, Accumulators
+## Building Your First Circuit
 
-#### File Browser
-- Browse `.ct` files from FluidSim 4.2
-- Preview circuit contents
-- Import circuits into the application
+### Circuit 1: Double-Acting Cylinder with Valve Control ⭐ Recommended
 
-### 3. Simulation Controls
+This is the simplest working circuit that demonstrates full extend/retract behavior.
 
-| Control | Function |
-|---------|----------|
-| **Start (▶)** | Begin or pause simulation |
-| **Step (⏭)** | Advance simulation by one time unit |
-| **Reset (⟲)** | Reset simulation to initial state |
-| **Zoom In/Out** | Adjust canvas view |
-| **Pan Mode** | Click and drag to move canvas |
+**Components (drag from library):**
+| Component | Category | Purpose |
+|-----------|----------|---------|
+| Gear Pump | Hydraulic → Sources | Pressure source |
+| 4/2 Way Valve | Hydraulic → Directional Valves | Direction control |
+| Double-Acting Cylinder | Hydraulic → Actuators | Linear actuator |
+| Tank / Reservoir | Hydraulic → Accessories | Fluid reservoir / ground |
 
-### 4. Component Properties
+**Connections (use Wire tool):**
+```
+Pump(P)  ──→  Valve(P)
+Valve(A) ──→  Cylinder(A)
+Cylinder(B) ──→  Valve(B)
+Valve(T) ──→  Tank(T)
+```
 
-Edit component properties in the Properties panel:
-- **Pumps/Compressors**: Flow rate, pressure, running state
-- **Cylinders**: Bore, stroke, mass, spring return
-- **Valves**: Actuation position, spring return
-- **Gauges**: Display current pressure/reading
-- **Motors**: Speed, torque, running state
+**How to test:**
+1. Press **F5** (Start) to begin simulation
+2. **Click the Actuate tool** (or press `A`), then click the valve to toggle it ON
+3. Watch the cylinder **extend** as pressure pushes it
+4. **Toggle the valve OFF** — pressure drains and the cylinder **retracts**
+5. Toggle again to repeat
 
-## File Structure
+### Circuit 2: Single-Acting Cylinder
+
+A simpler circuit that extends when pressurized and retracts via spring.
+
+**Components:**
+- Gear Pump, 2/2 Way Valve, Single-Acting Cylinder, Tank
+
+**Connections:**
+```
+Pump(P)  ──→  Valve(P)
+Valve(A) ──→  Cylinder(A)
+Cylinder(T) ──→  Tank(T)
+```
+
+**Note:** Single-acting cylinders require the **Actuate tool** (`A`) to toggle the valve. They extend when the valve is ON and spring-back when OFF.
+
+### Circuit 3: Pressure Relief Valve Protection
+
+Demonstrates pressure regulation with a relief valve.
+
+**Components:**
+- Gear Pump, Relief Valve, Double-Acting Cylinder, Tank
+
+**Connections:**
+```
+Pump(P)  ──→  Relief Valve(P)
+Relief Valve(A) ──→  Cylinder(A)
+Cylinder(B) ──→  Tank(T)
+Relief Valve(T) ──→  Tank(T)
+```
+
+**How it works:** Pressure builds until the relief valve opens at its set point (~200 bar default), protecting the circuit from over-pressurization.
+
+## Controls Reference
+
+| Key | Action |
+|-----|--------|
+| `F5` | Start / Pause simulation |
+| `F6` | Step simulation one frame |
+| `F7` | Reset simulation |
+| `F1` | Show keyboard shortcuts |
+| `V` | Select tool |
+| `W` | Wire tool |
+| `P` | Place tool |
+| `X` | Delete tool |
+| `A` | Actuate tool (toggle valve state) |
+| `R` | Rotate selected component |
+| `Esc` | Deselect / cancel |
+| `Ctrl+N` | New circuit |
+| `Ctrl+O` | Open circuit |
+| `Ctrl+S` | Save circuit |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Y` | Redo |
+| Mouse wheel | Zoom in/out |
+| Middle mouse drag | Pan canvas |
+
+## Status Bar Indicators
+
+The status bar at the bottom shows real-time feedback:
+
+- **✓ OK** (green) — Circuit is valid, no errors
+- **⚠ N ERRORS** (red) — Circuit has errors, hover for details
+- **! N WARN** (orange) — Circuit has warnings, hover for details
+- **RUNNING** (green) — Simulation is active
+- **X: ## Y: ##** — Current mouse position in scene coordinates
+
+## Architecture
 
 ```
 FluidSim-Linux/
-├── main.py              # Application entry point
-├── launcher.py          # Launcher (simulator / .ct browser)
+├── main.py                     # Entry point
+├── launcher.py                 # Dual-mode launcher (simulator + .ct browser)
+├── requirements.txt            # Python dependencies
 ├── src/
-│   ├── app.py          # Main application window
-│   ├── ui/             # Qt widgets
-│   │   ├── canvas.py   # Circuit editing canvas
-│   │   ├── tools.py    # Tool palette
-│   │   ├── properties.py # Component properties panel
-│   │   ├── library.py  # Symbol library browser
-│   │   ├── icons.py    # Programmatic QIcon generation
-│   │   └── validator.py # Circuit error/warning checks
-│   ├── simulation/     # Core simulation engine
-│   │   └── engine.py
-│   └── symbols/        # Symbol library
-│       └── library.py  # ISO schematic symbols, ports, defaults
-├── src/tools/           # Advanced tools
-│   ├── ct_browser.py   # CT file browser and decoder
-│   └── ct_import.py    # CT file import
-├── bin/                # Launcher scripts (fl_sim, fl_sim_h, fl_sim_p)
-├── requirements.txt    # Dependencies
-└── README.md           # This file
+│   ├── app.py                  # MainWindow — orchestrates all UI panels
+│   ├── ui/                     # Modern UI components
+│   │   ├── canvas.py           # Circuit editing canvas with rendering
+│   │   ├── tools.py            # Icon-based tool palette
+│   │   ├── library.py          # Symbol library with categories & search
+│   │   ├── properties.py       # Properties panel with live simulation values
+│   │   ├── icons.py            # Procedural icon generation (no assets needed)
+│   │   └── validator.py        # Circuit validation & error detection
+│   ├── simulation/
+│   │   └── engine.py           # Physics engine (pressure, flow, mechanics)
+│   ├── symbols/
+│   │   └── library.py          # 117 ISO schematic symbols + port definitions
+│   └── tools/
+│       ├── ct_browser.py       # FluidSim 4.2 .ct file browser
+│       └── ct_import.py        # .ct file import and decompression
+├── bin/
+│   ├── fl_sim                  # Launcher script (simulator)
+│   ├── fl_sim_h                # Launcher script (hydraulic mode)
+│   └── fl_sim_p                # Launcher script (pneumatic mode)
+├── icons/                      # Application icons
+└── tests/                      # Test suite
 ```
 
 ## Technical Details
 
 ### Simulation Engine
-- **Hydraulic Simulation**: Pascal's law, fluid continuity, pressure-flow relationships
-- **Pneumatic Simulation**: Air compression, pressure changes, thermodynamics basics
-- **Real-time Updates**: 60 FPS rendering with physics updates
-- **Component States**: Position, velocity, pressure, flow rate tracking
+The physics engine uses a time-stepped approach with fixed timestep integration:
 
-### File Format Support
-- **JSON**: Native circuit save/load format
-- **.ct Files**: Import from FluidSim 4.2 (with decompression)
-- **SVG**: Image export format
-- **PNG**: Image export format
+- **Pressure propagation**: Flood-fill algorithm propagates pressure from sources through open valves to actuators
+- **Cylinder dynamics**: Force = ΔP × Area, acceleration = F/m, with damping and spring return
+- **Valve logic**: Directional valves only pass pressure when actuated; closed valves block flow instantly
+- **Instant drain**: Non-pressurized nodes drop to atmospheric pressure immediately for responsive behavior
+- **Spring return**: Single-acting cylinders and cushioned cylinders have configurable spring constants
 
-### UI Framework
-- **PySide6**: Qt6 binding for Python (native Linux)
-- **Fusion Style**: Clean, modern look
-- **Dark Theme**: Professional appearance
-- **Responsive Design**: Adapts to different screen sizes
+### Symbol Standards
+All symbols follow [ISO 1219](https://www.iso.org/standard/45506.html) hydraulic and pneumatic circuit diagram standards, matching the original FluidSim 4.2 symbol catalog.
 
-## Examples
+### File Formats
+- **JSON** (`*.json`): Native save format with full component state
+- **.ct** (`*.ct`): FluidSim 4.2 circuit files (import only, with decompression support)
+- **PNG** / **SVG**: Image export for documentation and sharing
 
-### Creating a Simple Circuit
-1. Select **Gear Pump** from Hydraulic -> Sources
-2. Drag it onto the canvas and click to place
-3. Select **Single-Acting Cylinder** from Actuators
-4. Drag and place, then connect pump outlet to cylinder inlet
-5. Configure properties in the Properties panel
-6. Start simulation and observe cylinder movement
+## Testing
 
-### Working with Files
-1. Use the **File** menu or toolbar buttons:
-   - **New**: Start with a blank circuit
-   - **Open**: Import from JSON file
-   - **Save**: Export circuit to JSON
-   - **Export Image**: Save as PNG/SVG
-
-## Troubleshooting
-
-### Common Issues
-
-#### PySide6 Import Errors
 ```bash
-# Install PySide6
-pip install PySide6>=6.5.0
+# Run the UI test suite
+python3 -m pytest test_ui.py -v
+
+# All 6 tests cover:
+#   - App startup and widget creation
+#   - Tool palette with icons
+#   - Symbol library categories and search
+#   - Properties panel with live values
+#   - Canvas rendering and interactions
+#   - Icon generation and validity
 ```
-
-#### GUI Not Displaying
-1. Ensure your system has required display libraries:
-   - On Ubuntu/Debian: `sudo apt install libqt6gui5`
-   - On Fedora: `sudo dnf install qt6-gui-libs`
-
-#### Application Crashes
-- Check Python version: `python3 --version` (should be 3.8+)
-- Verify all dependencies are installed
-- Ensure you have permission to create files in the working directory
-
-### Getting Help
-- Check the **Documentation** folder for detailed guides
-- Visit the GitHub repository for issues and discussions
-- Community forums for user-generated solutions
 
 ## Contributing
 
-This project welcomes contributions from the community. Please follow these guidelines:
+Contributions are welcome! Please read the [MISSION.md](MISSION.md) for project goals and architecture.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -am 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Create a new Pull Request
 
 ### Code Style
-- Use black formatter for Python code
-- Follow PEP 8 style guidelines
-- Add type hints where appropriate
-
-### Testing
-- Run tests if available
-- Ensure no regression in functionality
-- Test on multiple platforms
-
-### Documentation
-- Update README when adding new features
-- Document new component types
-- Add usage examples
+- Follow [PEP 8](https://peps.python.org/pep-0008/) style guidelines
+- Use type hints where appropriate
+- Run tests before submitting: `python3 -m pytest test_ui.py -v`
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgements
 
-This project is inspired by:
-- **FluidSim 4.2** by Nanban/594mgnav
-- **PySide6** community for the Qt binding
-- **Python** ecosystem for scientific computing
-
-## Future Enhancements
-
-The following features are planned for future releases:
-- **3D visualization** of circuits
-- **Export to CAD formats** (STEP, IGES)
-- **Collaboration features** for multi-user editing
-- **Cloud integration** for sharing circuits
-- **Advanced analysis tools** (stress testing, optimization)
-- **Mobile support** (Android/iOS)
+- **[FluidSim 4.2](https://www.festo.com/fluidsimit)** by Festo Didactic — inspiration for component catalog and ISO symbol standards
+- **[PySide6](https://pypi.org/project/PySide6/)** — Qt6 Python bindings
+- **ISO 1219** — International standard for fluid power systems and components
 
 ## Support
 
-For support, visit the project GitHub or submit an issue through the issue tracker.
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: See [README.md](README.md) and [MISSION.md](MISSION.md)
+- **Keyboard Shortcuts**: Press `F1` in the application for the full reference
