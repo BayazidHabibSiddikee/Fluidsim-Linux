@@ -351,6 +351,13 @@ class CircuitCanvas(QWidget):
         self._wire_start_port = None
         self._wire_start_pos = None
         self._wire_preview = None
+        self._free_wire_points = []   # freehand wire build points
+        self._free_wire_active = False
+        self._free_wire_snap = False  # shift held -> snap-to-grid
+
+        # component drag quality
+        self._ghost_comp = None       # component being dragged (original pos copy)
+        self._snap_offset = None      # QPointF offset from snap point at drag start
 
         # hover port highlight
         self._hover_port = None
@@ -382,6 +389,8 @@ class CircuitCanvas(QWidget):
         self._wire_start_port = None
         self._wire_start_pos = None
         self._wire_preview = None
+        self._free_wire_points = []
+        self._free_wire_active = False
         self._hover_port = None
         self._hover_port_pos = None
         if tool_name == "select":
@@ -744,7 +753,9 @@ class CircuitCanvas(QWidget):
         self._draw_connections(painter)
         self._draw_components(painter)
         self._draw_selection(painter)
+        self._draw_ghost_and_guides(painter)
         self._draw_wire_preview(painter)
+        self._draw_free_wire_preview(painter)
         self._draw_ports(painter)
         self._draw_port_highlight(painter)
         painter.end()
@@ -911,6 +922,49 @@ class CircuitCanvas(QWidget):
                 path.lineTo(p)
         painter.drawPath(path)
 
+    def _draw_free_wire_preview(self, painter):
+        """Draw click-placed freehand wire points."""
+        if not self._free_wire_points:
+            return
+        pen = QPen(QColor(50, 180, 255), 1.5, Qt.DashDotLine)
+        painter.setPen(pen)
+        path = QPainterPath()
+        pts = self._free_wire_points
+        path.moveTo(pts[0])
+        for p in pts[1:]:
+            path.lineTo(p)
+        painter.drawPath(path)
+        dot_pen = QPen(QColor(50, 180, 255))
+        painter.setPen(dot_pen)
+        r = 2.5 / self._zoom
+        for p in pts:
+            painter.drawEllipse(p, r, r)
+
+    def _draw_ghost_and_guides(self, painter):
+        """Semi-transparent ghost at original position + snap crosshair at current."""
+        if self._ghost_comp is None or not self._dragging:
+            return
+        comp = self._ghost_comp
+        orig_x = self._snap(self._drag_comp_start.x())
+        orig_y = self._snap(self._drag_comp_start.y())
+        w, h = comp["width"], comp["height"]
+        cur_x = self._snap(comp["x"])
+        cur_y = self._snap(comp["y"])
+        # Ghost rectangle at ORIGINAL position (before drag)
+        ghost_pen = QPen(QColor(42, 130, 218), 1.5, Qt.DashLine)
+        painter.setPen(ghost_pen)
+        painter.setBrush(QBrush(QColor(42, 130, 218, 40)))
+        painter.drawRect(QRectF(orig_x, orig_y, w, h))
+        # Snap guide crosshair at CURRENT target
+        guide_pen = QPen(QColor(42, 130, 218), 1.0, Qt.DashLine)
+        painter.setPen(guide_pen)
+        painter.drawLine(QPointF(cur_x, 0.0), QPointF(cur_x, 10000.0))
+        painter.drawLine(QPointF(0.0, cur_y), QPointF(10000.0, cur_y))
+        snap_r = 3.0 / self._zoom
+        dot_pen = QPen(QColor(42, 130, 218), 2.0)
+        painter.setPen(dot_pen)
+        painter.drawEllipse(QPointF(cur_x, cur_y), snap_r, snap_r)
+
     def _draw_ports(self, painter):
         r = 4.0 / self._zoom
         for comp in self.components:
@@ -972,6 +1026,19 @@ class CircuitCanvas(QWidget):
             # --- WIRE mode ---
             if self._tool == "wire":
                 port = self._find_nearest_port(scene_pos)
+                if event.modifiers() & Qt.ShiftModifier:
+                    # SHIFT + click = freehand wire build point (anywhere on canvas)
+                    snap = self._snap_point(scene_pos) if self._free_wire_snap else scene_pos
+                    if self._free_wire_active and self._free_wire_points:
+                        last = self._free_wire_points[-1]
+                        if last.distanceTo(snap) > 5.0:
+                            self._free_wire_points.append(snap)
+                    elif not self._free_wire_active:
+                        self._free_wire_active = True
+                        self._free_wire_points = [snap]
+                    self.update()
+                    return
+                # Normal mode: port-to-port wiring
                 if port is not None:
                     if self._wire_start_port is None:
                         self._wire_start_port = port
@@ -993,10 +1060,19 @@ class CircuitCanvas(QWidget):
                         self._wire_start_pos = None
                         self._wire_preview = None
                 else:
-                    # click empty = cancel wire
-                    self._wire_start_port = None
-                    self._wire_start_pos = None
-                    self._wire_preview = None
+                    # Click empty area: finalize freehand wire or cancel
+                    if self._free_wire_active and len(self._free_wire_points) >= 2:
+                        conn = {
+                            "id": _gen_id(),
+                            "from_component": None,
+                            "from_port": None,
+                            "to_component": None,
+                            "to_port": None,
+                            "points": list(self._free_wire_points),
+                        }
+                        self._undo_stack.push(_PlaceWireCommand(self, conn))
+                    self._free_wire_points = []
+                    self._free_wire_active = False
                 self.update()
                 return
 
@@ -1044,6 +1120,10 @@ class CircuitCanvas(QWidget):
                 self._dragging = True
                 self._drag_start = scene_pos
                 self._drag_comp_start = QPointF(comp["x"], comp["y"])
+                self._snap_offset = QPointF(
+                    comp["x"] - self._snap(comp["x"]),
+                    comp["y"] - self._snap(comp["y"]))
+                self._ghost_comp = comp
                 self.update()
                 return
 
@@ -1075,7 +1155,7 @@ class CircuitCanvas(QWidget):
             self.update()
             return
 
-        # Component dragging
+        # Component dragging — position updates live; ghost drawn below
         if self._dragging and self.selected_component is not None:
             dx = scene_pos.x() - self._drag_start.x()
             dy = scene_pos.y() - self._drag_start.y()
@@ -1084,7 +1164,7 @@ class CircuitCanvas(QWidget):
             self.selected_component["x"] = nx
             self.selected_component["y"] = ny
             self._rebuild_connection_paths()
-            self.update()
+            # Ghost + guides rendered by paintEvent below
             return
 
         # Resize-handle dragging
