@@ -1,0 +1,3 @@
+#!/bin/bash
+# FluidSim Linux - launch in pneumatic mode
+exec python3 "$(dirname "$0")/../main.py" --mode pneumatic "$@"

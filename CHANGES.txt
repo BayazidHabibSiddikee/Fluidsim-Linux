@@ -1,0 +1,185 @@
+FluidSim-Linux Animation & Shortcuts Enhancement
+==================================================
+
+Date: 2026-08-12
+Changes by: Mistral Vibe
+
+SUMMARY OF CHANGES:
+-------------------
+
+1. ENABLED ANIMATIONS
+   - Fixed the symbol library to pass sim_state to all component draw functions
+   - Added visual animations for key components:
+     * Cylinders (single & double): Piston position animation
+     * Pumps: Running/stopped state coloring
+     * Motors: Running/stopped state coloring
+     * Directional Valves: Position indicator, actuation highlighting
+     * Tank: Fluid level visualization with blue fill
+     * Pressure Gauge: Needle rotation based on pressure reading
+
+2. ADDED COMPREHENSIVE SHORTCUTS DIALOG
+   - Enhanced _show_shortcuts() method in src/app.py
+   - Added F1 shortcut to show all keyboard shortcuts
+   - Added to Help menu
+   - Organized shortcuts into categories:
+     * File Operations
+     * Edit Operations
+     * Component Operations
+     * Simulation Control
+     * View Control
+     * Mode & Settings
+     * Information
+
+3. TECHNICAL DETAILS:
+   - Modified src/symbols/library.py:
+     * Updated draw_symbol() to pass sim_state to all _draw_* functions
+     * Added sim_state=None parameter to all 80+ _draw_* functions
+     * Enhanced specific component animations:
+       - _draw_pump: Gray out when not running
+       - _draw_motor: Gray out when not running
+       - _draw_cylinder_single: Piston moves based on position (0.0-1.0)
+       - _draw_cylinder_double: Piston moves based on position (0.0-1.0)
+       - _draw_directional_valve: Shows position indicator, highlights when actuated
+       - _draw_tank: Blue fluid fill based on level
+       - _draw_pressure_gauge: Needle rotates based on reading
+
+   - Modified src/app.py:
+     * Enhanced _show_shortcuts() with comprehensive list
+     * Changed from QMessageBox to QDialog with formatted HTML
+     * Added to Help menu with F1 shortcut
+     * Added categories and better formatting
+
+4. ANIMATION HOW IT WORKS:
+   - The simulation engine (src/simulation/engine.py) calculates component states
+   - States are passed to canvas via set_sim_states() method
+   - Canvas passes sim_state to draw_symbol() for each component
+   - draw_symbol() now forwards sim_state to individual _draw_* functions
+   - Each _draw_* function uses sim_state to animate its component
+
+5. COMPONENT ANIMATION STATES:
+   - Pumps/Compressors: "on" or "running" boolean
+   - Cylinders: "position" float (0.0 to 1.0)
+   - Valves: "position" int (0 or 1), "actuated" boolean
+   - Tanks: "level" float (0.0 to 1.0)
+   - Gauges: "reading" float (pressure value)
+   - Motors: "running" boolean, "speed" float
+
+6. VISUAL FEEDBACK:
+   - Gray color for stopped/disabled components
+   - Red fill for fluid in tanks
+   - Red position indicator for valve spools
+   - Green highlight for actuated valves
+   - Rotating needle for pressure gauges
+   - Moving piston lines for cylinders
+
+7. TESTING:
+   - All imports verified working
+   - Symbol library draw functions accept sim_state
+   - Canvas passes sim_state correctly
+   - Shortcuts dialog opens with F1 or from Help menu
+
+8. COMPATIBILITY:
+   - All existing functionality preserved
+   - Backward compatible (sim_state=None default)
+   - No breaking changes to existing code
+
+NEXT STEPS:
+-----------
+- Run the application: python3 launcher.py or python3 main.py
+- Create a circuit with pumps, cylinders, valves, gauges
+- Start simulation with F5
+- Observe animations in action
+- Press F1 for complete shortcuts list
+FluidSim-Linux Proper Tool Parts + Port-Switch Actuation
+==========================================================
+
+Date: 2026-08-17
+Scope: Active app path (src/ui/*), shared engine (src/simulation/engine.py),
+       app wiring (src/app.py). Tests added at repo root.
+
+SUMMARY OF CHANGES:
+-------------------
+
+1. RESTRUCTURED TOOLS INTO PROPER "TOOL PARTS"
+   - src/ui/tools.py rewritten around reusable parts:
+     * ToolSpec   - immutable descriptor (id, label, tooltip, shortcut, icon)
+     * ToolManager- registry + lookup/index_of/has (UI-free)
+     * ToolButton - styled checkable QToolButton bound to a ToolSpec
+     * ToolPalette- composes the button grid from a ToolManager
+   - .buttons stays list-like with a .button(i) helper so the canvas keyboard
+     shortcuts (V/W/P/X/T) keep working unchanged.
+   - Added a sixTH tool: "Actuate" (id=toggle, shortcut T) with a new icon
+     (tool_toggle in src/ui/icons.py).
+   - The same parts structure was also applied to the legacy src/editor/tools.py
+     (currently unused by the app, kept as the single reference implementation).
+
+2. FIXED set_tool() ONLY ACCEPTING THREE TOOLS
+   - CircuitCanvas.set_tool() (both src/ui/canvas.py and src/editor/canvas.py)
+     previously dropped "delete" and "pan". It now accepts all six registered
+     tool ids: select/wire/place/delete/pan/toggle.
+   - The Delete tool is now actually handled in mousePressEvent (click a
+     component/wire to remove it); Pan tool pans on left-drag.
+
+3. INTERACTIVE PORT SWITCHES (valve actuation)
+   - New <Actuate/Toggle> tool: clicking a directional valve flips
+     properties["actuated"], updates the live sim state immediately
+     (position 0<->1), repaints the symbol, and emits actuation_changed.
+   - CircuitCanvas gains is_directional_valve() and toggle_component_actuation().
+   - SimulationEngine gains set_actuated()/toggle_actuation() helpers so the
+     UI and tests share one code path; _on_actuation_changed() in app.py keeps
+     the running engine and properties panel synced and posts a status message.
+
+4. ENGINE NOW COVERS ALL DIRECTIONAL VALVES (incl. 5/2 AND 5/3)
+   - New module-level DIRECTIONAL_VALVES + _apply_actuation().
+   - _init_state()/_update_component() previously skipped valve_5_2 and
+     valve_5_3, so those valves had no sim state and could not animate.
+     They are now covered; _draw_directional_valve already reads
+     position/actuated for every valve type, so they animate with no drawing
+     changes.
+
+5. SHORTCUTS & DOCUMENTATION
+   - T = Actuate / Port Switch added to the canvas key handler and to the
+     shortcuts dialog (F1).
+
+6. TESTS (repo root, flat style like the existing scripts)
+   - test_engine.py   22 checks   (pure logic; no PySide6 needed)
+   - test_tools.py    14 checks   (needs QT_QPA_PLATFORM=offscreen)
+   - test_canvas.py   21 checks   (needs QT_QPA_PLATFORM=offscreen)
+   Run: python3 test_engine.py
+        QT_QPA_PLATFORM=offscreen python3 test_tools.py
+        QT_QPA_PLATFORM=offscreen python3 test_canvas.py
+FluidSim-Linux Visibility Fix + Hydraulic / Pneumatic Parts
+===========================================================
+
+Date: 2026-08-17
+Scope: src/ui/library.py (symbol browser), src/ui/tools.py, src/app.py wiring.
+
+SUMMARY OF CHANGES:
+-------------------
+
+1. FIXED "BLACK SCREEN" / INVISIBLE COMPONENTS IN THE LIBRARY
+   - Root cause: the component thumbnails (comp_*) are drawn in black
+     (#000000) on a transparent background, but the library list background
+     is near-black (#1e1e1e) -> the whole symbol panel read as a black void.
+   - Added _symbol_tile(sym_id): renders each symbol on a light rounded tile
+     (#eaf2ea) so the black strokes are clearly visible in the dark panel.
+   - All thumbnail call sites now use _symbol_tile().
+
+2. RESTORED THE TWO PARTS: HYDRAULIC AND PNEUMATIC
+   - Added a prominent domain switch at the top of the symbol library with two
+     separate checkable parts: [Hydraulic] [Pneumatic], colour-coded blue /
+     teal. Each part loads only that domain's catalog categories.
+   - New SymbolLibrary.mode_requested signal keeps the toolbar mode combo AND
+     the simulation engine in sync when a part is picked in the library
+     (app.py _from_library_mode), and set_mode() refreshes the tab highlighting.
+
+3. VERIFIED END-TO-END
+   - Swapping parts in the library updates toolbar combo + engine mode.
+   - New test_library.py (9 checks) covers the two-part switch and the
+     light tile visibility.
+
+Run tests:
+   python3 test_engine.py
+   QT_QPA_PLATFORM=offscreen python3 test_tools.py
+   QT_QPA_PLATFORM=offscreen python3 test_canvas.py
+   QT_QPA_PLATFORM=offscreen python3 test_library.py

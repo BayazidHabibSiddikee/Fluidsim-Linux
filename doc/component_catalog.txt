@@ -1,0 +1,101 @@
+FluidSim 4.2 Component Catalog (from index.txt)
+============================================================
+
+  [030] Displacement transmission (2)
+  [031] Pressure transfer (1)
+  [032] Pressure transfer (2)
+  [033] Types of flow
+  [034] Diesel effect
+  [035] Cavitation
+  [036] Cavitation
+  [037] Input and output power
+  [038] Hydraulic power unit p
+  [039] Hydraulic power unit
+  [040] Externally toothed gear pump p
+  [041] Internally toothed gear pump p
+  [042] Circuit diagram
+  [043] Circuit diagram
+  [044] Circuit diagram
+  [045] Circuit diagram
+  [046] Water cooler p
+  [047] Air cooler p
+  [048] Heating element p
+  [049] Circuit diagram
+  [050] Actuating force
+  [051] Poppet principle
+  [052] Slide principle
+  [053] Poppet valves
+  [054] Piston overlap
+  [055] Negative switching overlap p
+  [056] Positive switching overlap
+  [057] Control edges
+  [058] Vertical interconnection system
+  [059] Pressure relief valve (1)
+  [060] Pressure relief valve (2)
+  [062] Circuit diagram
+  [063] Circuit without brake valve
+  [064] Circuit diagram
+  [065] Circuit with brake valve
+  [066] Circuit diagram
+  [070] Sequence valve
+  [071] Circuit diagram
+  [072] Pressure relief valve
+  [078] Circuit diagram
+  [079] Circuit diagram
+  [087] Circuit diagram
+  [091] Circuit diagram
+  [092] Circuit diagram
+  [094] Circuit diagram for pressure
+  [095] Circuit diagram
+  [099] Circuit diagram
+  [109] Circuit diagram
+  [114] Circuit diagram
+  [120] Circuit diagram
+  [123] Directional control valve
+  [125] Non
+  [126] Non
+  [127] Circuit diagram
+  [128] Graetz block (1)
+  [129] Graetz block (2)
+  [130] Graetz block p
+  [131] Delockable non
+  [132] Delockable non
+  [133] Delockable non
+  [134] Circuit diagram
+  [135] Delockable non
+  [136] Delockable double non
+  [137] Delockable double non
+  [138] Delockable double non
+  [139] Circuit diagram
+  [140] Needle restrictor p
+  [141] Gap restrictor with helix p
+  [142] Circuit diagram
+  [143] Flow control valve
+  [144] One
+  [145] One
+  [149] Circuit diagram
+  [151] Single acting cylinder p
+  [152] Plunger cylinder p
+  [153] Double acting cylinder p
+  [154] Double acting cylinder with end position cushioning p
+  [155] End position cushioning (1)
+  [156] End position cushioning (2)
+  [157] End position cushioning
+  [158] Double acting cylinder
+  [159] Automatic bleed valve
+  [160] Piston pressure gauge p
+  [161] Bourdon
+  [162] Flow meter p
+  [163] Exercise
+  [164] Exercise
+  [165] Exercise
+  [166] Exercise
+  [167] Exercise
+  [168] Exercise
+  [169] Exercise
+  [170] Exercise
+  [171] Exercise
+  [172] Exercise
+  [173] Exercise
+
+Total: 96 unique component types
