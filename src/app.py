@@ -389,7 +389,7 @@ class MainWindow(QMainWindow):
         value = bool(props.get("actuated", False))
         self.sim_engine.set_actuated(comp, value)
         self.canvas.set_sim_states(dict(self.sim_engine.component_states))
-        self.props_panel.set_sim_states(dict(self.sim_engine.component_states))
+        self.dock_props_panel.set_sim_states(dict(self.sim_engine.component_states))
         self.statusbar.showMessage(
             f"Port switch {comp.get('type', '')} → "
             f"{'ACTUATED' if value else 'released'}")
@@ -397,12 +397,12 @@ class MainWindow(QMainWindow):
     def _sim_step(self):
         self.sim_engine.step(self.canvas.components, self.canvas.connections)
         self.canvas.set_sim_states(dict(self.sim_engine.component_states))
-        self.props_panel.set_sim_states(dict(self.sim_engine.component_states))
+        self.dock_props_panel.set_sim_states(dict(self.sim_engine.component_states))
 
     def _sim_reset(self):
         self.sim_engine.reset()
         self.canvas.set_sim_states({})
-        self.props_panel.set_sim_states({})
+        self.dock_props_panel.set_sim_states({})
         self.statusbar.showMessage("Simulation reset")
 
 
