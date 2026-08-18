@@ -1,6 +1,8 @@
-# FluidSim Linux
+# FluidSim Linux (v0.2.0)
 
 A **Linux-native replacement** for [FluidSim 4.2](https://www.festo.com), an interactive hydraulic & pneumatic circuit simulator. Build circuits visually, wire components together, and run real-time physics simulations — all without Wine.
+
+**Current version: v0.2.0**
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
@@ -16,7 +18,7 @@ Watch FluidSim Linux in action — place components, wire a circuit, and run the
 
 > *Tip: Right-click the link above → "Save video as..." to watch offline.*
 
-## Features
+## Features (v0.2.0)
 
 ### Core Simulation
 - Real-time hydraulic and pneumatic circuit simulation with full ISO 1219 symbols
@@ -53,9 +55,9 @@ Watch FluidSim Linux in action — place components, wire a circuit, and run the
 
 ## System Requirements
 
-- **OS**: Linux (any recent distribution with X11/Wayland)
 - **Python**: 3.8 or higher
 - **Dependencies**: PySide6 ≥ 6.5.0, numpy ≥ 1.21.0
+- **OS**: Linux (X11 or Wayland)
 
 ## Download & Install
 
@@ -240,7 +242,12 @@ FluidSim-Linux/
 
 | Version | File | Size | Notes |
 |---------|------|------|-------|
+| v0.2.0 | [`fluidsim-linux-v0.2.0.tar.gz`](releases/fluidsim-linux-v0.2.0.tar.gz) | 3.5 MB | Bug fixes, file dialog improvements, duplicate method removal |
 | v0.1.0 | [`fluidsim-linux-v0.1.0.tar.gz`](releases/fluidsim-linux-v0.1.0.tar.gz) | 1.3 MB | First stable release |
+
+### AppImage / Flatpak / DEB (Coming Soon)
+
+A single-file AppImage and a `.deb` package are in development. For now, use the tarball or clone from Git.
 
 To install as a system application (adds to your desktop menu):
 ```bash
@@ -271,9 +278,9 @@ All symbols follow [ISO 1219](https://www.iso.org/standard/45506.html) hydraulic
 
 ```bash
 # Run the UI test suite
-python3 -m pytest test_ui.py -v
+python3 -m pytest -v
 
-# All 6 tests cover:
+# All 20 tests cover:
 #   - App startup and widget creation
 #   - Tool palette with icons
 #   - Symbol library categories and search

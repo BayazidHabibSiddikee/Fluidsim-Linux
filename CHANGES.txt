@@ -1,6 +1,30 @@
 FluidSim-Linux Animation & Shortcuts Enhancement
 ==================================================
 
+FluidSim Linux v0.2.0
+======================
+
+Date: 2026-08-18
+Changes by: Bayazid Habib Siddikee
+
+SUMMARY OF CHANGES:
+-------------------
+
+1. FILE DIALOG FIX (Bug Fix)
+   - All file dialogs (Open, Save, Export) now default to home directory instead of root /
+   - Fixed _on_open_ct() when FluidSim 4.2 is not installed (start_dir fallback)
+   - Fixed ct_browser.py save dialog default path
+   - Files affected: src/app.py, src/tools/ct_browser.py
+
+2. CODE QUALITY
+   - Removed duplicate _on_modified() method in MainWindow (was silently overriding improved version)
+   - All 20 unit tests pass
+
+3. DOCUMENTATION
+   - Updated README.md with current feature list, verified test counts
+   - Added demo video download link
+   - Updated system requirements section
+
 Date: 2026-08-12
 Changes by: Mistral Vibe
 

@@ -359,10 +359,6 @@ class MainWindow(QMainWindow):
             self.canvas.export_image(path)
             self.statusbar.showMessage(f"Exported: {path}")
 
-    def _on_modified(self):
-        self.modified = True
-        self._update_title()
-
     def _update_title(self):
         name = self.current_file or "Untitled"
         mod = " *" if self.modified else ""
