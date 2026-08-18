@@ -1,3 +1,2 @@
 #!/bin/bash
-# FluidSim Linux - launch in hydraulic mode
-exec python3 "$(dirname "$0")/../main.py" --mode hydraulic "$@"
+exec python3 "$(dirname "$(readlink -f "$0")")/../main.py" --mode hydraulic "$@"

@@ -1,3 +1,2 @@
 #!/bin/bash
-# FluidSim Linux - launch the circuit simulator
-exec python3 "$(dirname "$0")/../main.py" "$@"
+exec python3 "$(dirname "$(readlink -f "$0")")/../main.py" "$@"
