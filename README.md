@@ -47,7 +47,29 @@ A **Linux-native replacement** for [FluidSim 4.2](https://www.festo.com), an int
 - **Python**: 3.8 or higher
 - **Dependencies**: PySide6 ≥ 6.5.0, numpy ≥ 1.21.0
 
-## Installation
+## Download & Install
+
+### Option 1: Git (recommended for development)
+```bash
+git clone https://github.com/BayazidHabibSiddikee/Fluidsim-Linux.git
+cd FluidSim-Linux
+pip install -r requirements.txt
+python3 main.py
+```
+
+### Option 2: Release tarball
+Download the latest `.tar.gz` from the [Releases page](https://github.com/BayazidHabibSiddikee/Fluidsim-Linux/releases).
+Unpack and run:
+```bash
+tar xzf fluidsim-linux-v*.tar.gz
+cd FluidSim-Linux
+python3 main.py
+```
+
+### Option 3: Package Manager
+Install from your distro's package repository or use Flatpak/AppImage (coming soon).
+
+## Installation Dependencies
 
 ```bash
 # Install dependencies
@@ -202,6 +224,18 @@ FluidSim-Linux/
 │   └── fl_sim_p                # Launcher script (pneumatic mode)
 ├── icons/                      # Application icons
 └── tests/                      # Test suite
+```
+
+## Releases & Packages
+
+| Version | File | Size | Notes |
+|---------|------|------|-------|
+| v0.1.0 | [`fluidsim-linux-v0.1.0.tar.gz`](releases/fluidsim-linux-v0.1.0.tar.gz) | 1.3 MB | First stable release |
+
+To install as a system application (adds to your desktop menu):
+```bash
+sudo cp ~/.local/share/applications/fluidsim.desktop /usr/share/applications/
+sudo cp ~/.local/share/icons/hicolor/256x256/apps/fluidsim.png /usr/share/icons/hicolor/256x256/apps/
 ```
 
 ## Technical Details

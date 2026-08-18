@@ -1,8 +1,46 @@
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+pip-wheel-metadata/
 *.egg-info/
-build/
 dist/
-.venv/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
 venv/
+env/
+.venv/
+.env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Cached node/python files
+node_modules/
+
+# Logs
+*.log
+
+# Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Generated icons / cached QImages
+*.qrc
