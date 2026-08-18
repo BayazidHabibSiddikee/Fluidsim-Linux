@@ -8,10 +8,13 @@ A **Linux-native replacement** for [FluidSim 4.2](https://www.festo.com), an int
 
 ![FluidSim Linux Screenshot](docs/screenshots/hero.png)
 
-<video controls preload="metadata" width="100%" max-width="800">
-  <source src="docs/demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+### 🎬 Demo Video
+
+Watch FluidSim Linux in action — place components, wire a circuit, and run the simulation:
+
+[📥 Download Demo Video (MP4)](docs/demo.mp4)
+
+> *Tip: Right-click the link above → "Save video as..." to watch offline.*
 
 ## Features
 
