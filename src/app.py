@@ -280,7 +280,7 @@ class MainWindow(QMainWindow):
 
     def _on_open(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open Circuit", "", "FluidSim (*.ct *.json);;All (*)")
+            self, "Open Circuit", str(Path.home()), "FluidSim (*.ct *.json);;All (*)")
         if path:
             try:
                 with open(path) as f:
@@ -309,7 +309,7 @@ class MainWindow(QMainWindow):
     def _on_open_ct(self):
         from src.tools.ct_import import load_file, detect_fluidsim_root
         root = detect_fluidsim_root()
-        start_dir = str(root / "Hydraulic" / "ct") if root else ""
+        start_dir = str(root / "Hydraulic" / "ct") if root else str(Path.home())
         path, _ = QFileDialog.getOpenFileName(
             self, "Open .ct File", start_dir,
             "FluidSim Files (*.ct);;All Files (*)")
@@ -335,7 +335,7 @@ class MainWindow(QMainWindow):
 
     def _on_save_as(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save Circuit", "", "FluidSim (*.ct);;JSON (*.json)")
+            self, "Save Circuit", str(Path.home()), "FluidSim (*.ct);;JSON (*.json)")
         if path:
             self._do_save(path)
             self.current_file = path
@@ -354,7 +354,7 @@ class MainWindow(QMainWindow):
 
     def _on_export(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export Image", "", "PNG (*.png);;SVG (*.svg)")
+            self, "Export Image", str(Path.home()), "PNG (*.png);;SVG (*.svg)")
         if path:
             self.canvas.export_image(path)
             self.statusbar.showMessage(f"Exported: {path}")

@@ -526,7 +526,7 @@ class CTBrowser(QWidget):
         
         # Get file path
         save_path, _ = QFileDialog.getSaveFileName(
-            self, "Save Decoded Content", "",
+            self, "Save Decoded Content", str(Path.home()),
             "Text Files (*.txt);;All Files (*)"
         )
         
