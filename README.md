@@ -8,6 +8,11 @@ A **Linux-native replacement** for [FluidSim 4.2](https://www.festo.com), an int
 
 ![FluidSim Linux Screenshot](docs/screenshots/hero.png)
 
+<video controls preload="metadata" width="100%" max-width="800">
+  <source src="docs/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 ## Features
 
 ### Core Simulation
