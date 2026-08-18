@@ -6,6 +6,8 @@ A **Linux-native replacement** for [FluidSim 4.2](https://www.festo.com), an int
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
+![FluidSim Linux Screenshot](docs/screenshots/hero.png)
+
 ## Features
 
 ### Core Simulation
