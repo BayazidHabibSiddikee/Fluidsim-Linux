@@ -10,6 +10,8 @@ class CircuitManager:
 
     def __init__(self, mode: str = "hydraulic"):
         self._sim = HeadlessSimulation(mode)
+        self._components = []  # List of component dicts
+        self._connections = []  # List of connection dicts
 
     # --- Component operations ---
 
@@ -31,6 +33,7 @@ class CircuitManager:
             "properties": properties or {},
         }
         self._sim.add_component(component)
+        self._components.append(component)
         return component
 
     def delete_component(self, component_id: str) -> bool:
@@ -58,7 +61,15 @@ class CircuitManager:
         Returns:
             True if connected, False if components not found
         """
-        return self._sim.connect_components(from_id, to_id, from_port, to_port)
+        result = self._sim.connect_components(from_id, to_id, from_port, to_port)
+        if result:
+            self._connections.append({
+                "from": from_id,
+                "to": to_id,
+                "from_port": from_port,
+                "to_port": to_port,
+            })
+        return result
 
     def disconnect(self, from_id: str, to_id: str) -> bool:
         """Disconnect two components.
@@ -145,6 +156,13 @@ class CircuitManager:
         return self._sim.get_full_state()
 
     # --- Mode / reset ---
+
+    def sync(self):
+        """Sync the simulation with the circuit manager state."""
+        self._sim._circuit_components = list(self._components)
+        self._sim._circuit_connections = list(self._connections)
+        for comp in self._components:
+            self._sim._ensure_engine_state(comp)
 
     def set_mode(self, mode: str):
         """Switch simulation mode.

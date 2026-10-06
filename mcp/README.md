@@ -228,3 +228,14 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [FluidSim Linux](https://github.com/BayazidHabibSiddikee/Fluidsim-Linux)
 - [MCP Protocol](https://modelcontextprotocol.io/)
 - [Issue Tracker](https://github.com/BayazidHabibSiddikee/Fluidsim-Linux/issues)
+
+## Headless Mode
+
+The FluidSim MCP Server runs in **headless mode** - no GUI required!
+
+- **No display needed**: Works on servers, Docker, CI/CD
+- **No PySide6 dependency**: Pure Python core
+- **AI-friendly**: Designed for AI assistant integration
+- **Multiple deployment options**: pip, Docker, systemd
+
+See [docs/HEADLESS_MODE.md](docs/HEADLESS_MODE.md) for details.

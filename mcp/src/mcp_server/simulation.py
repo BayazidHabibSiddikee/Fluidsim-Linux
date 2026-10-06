@@ -14,7 +14,7 @@ from src.simulation.engine import SimulationEngine
 
 
 class HeadlessSimulation:
-    """Headless simulation wrapper that works without PySide6 GUI."""
+    """Headless simulation wrapper that works without GUI."""
 
     def __init__(self, mode: str = "hydraulic"):
         self.engine = SimulationEngine()
@@ -192,45 +192,40 @@ class HeadlessSimulation:
         return False
 
     def validate_circuit(self) -> Dict[str, Any]:
-        """Validate the current circuit.
+        """Validate the current circuit in a headless environment.
         
         Returns:
             Dict with 'valid' boolean and list of 'errors'
         """
-        # Import here to avoid circular dependency
-        from src.ui.validator import CircuitValidator
-        
         if not self._circuit_components:
             return {"valid": True, "errors": []}
         
-        # Build a simplified diagram for validation
-        from src.ui.canvas import CircuitCanvas
-        from PySide6.QtWidgets import QApplication
-        import sys
-        app = QApplication.instance() or QApplication(sys.argv)
+        # Simple headless validation without GUI
+        errors = []
+        connected_components = set()
         
-        try:
-            canvas = CircuitCanvas()
-            # Temporarily set the components and connections
-            original_components = canvas.components
-            original_connections = canvas.connections
-            
-            canvas.components = self._circuit_components
-            canvas.connections = self._circuit_connections
-            
-            # Run validation
-            validator = CircuitValidator()
-            results = validator.validate(canvas)
-            
-            canvas.components = original_components
-            canvas.connections = original_connections
-            
-            return {
-                "valid": results.get("valid", False),
-                "errors": results.get("errors", []),
-            }
-        except Exception as e:
-            return {"valid": False, "errors": [f"Validation failed: {str(e)}"]}
+        # Check for duplicate connections
+        seen_connections = set()
+        for conn in self._circuit_connections:
+            key = (conn.get("from"), conn.get("to"))
+            if key in seen_connections:
+                errors.append(f"Duplicate connection: {conn.get('from')} -> {conn.get('to')}")
+            seen_connections.add(key)
+            connected_components.add(key[0])
+            connected_components.add(key[1])
+        
+        # Check for floating components (not connected to any other component)
+        for comp in self._circuit_components:
+            cid = comp.get("id")
+            if cid not in connected_components:
+                errors.append(f"Floating component: {cid}")
+        
+        if errors:
+            return {"valid": False, "errors": errors}
+        
+        return {"valid": True, "errors": []}
+        
+    
 
     def get_full_state(self) -> Dict[str, Any]:
         """Get the complete state of the simulation.
