@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*\.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+glass
+
+# Virtual environments
+venv/
+.env
+.venv/
+ENV/
+env/
+.virtualenv/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# MCP server specific
+mcp/src/mcp_server/__pycache__/
+mcp/tests/__pycache__/
+mcp/test_basic.py
+
+# Data
+*.json
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~

@@ -1,0 +1,33 @@
+[Unit]
+Description=FluidSim MCP Server - Hydraulic & Pneumatic Circuit Simulator for AI
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/fluidsim-mcp/mcp
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+# Set the working directory
+ExecStart=/usr/bin/python3 -m mcp_server.server --stdio
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+
+# Limit resources
+LimitNOFILE=65536
+
+# Log output
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/www-data/.fluidsim
+
+[Install]
+WantedBy=multi-user.target
