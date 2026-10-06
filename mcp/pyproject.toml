@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-fluidsim"
+version = "0.1.0"
+description = "MCP server for FluidSim Linux - Hydraulic & Pneumatic circuit simulator. Exposes simulation, circuit, library, and file operations as AI-accessible tools."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "BayazidHabibSiddikee", email = "2208053.mte.ruet@gmail.com"}
+]
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "numpy>=1.21.0",
+]
+
+[project.scripts]
+mcp-fluidsim = "mcp_server.server:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
